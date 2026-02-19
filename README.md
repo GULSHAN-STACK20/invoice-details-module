@@ -5,8 +5,10 @@ A full-stack web application for booking home repair services built with the MER
 ## 🚀 Features
 
 - **Service Booking System**: Browse and book various home repair services
+- **Invoice Management System**: Complete invoice module with line items and payments
 - **Real-time Updates**: Instant booking confirmations and status updates
-- **RESTful API**: Well-structured backend API for service and booking management
+- **Payment Tracking**: Add and track payments against invoices
+- **RESTful API**: Well-structured backend API for service, booking, and invoice management
 - **Responsive Design**: Mobile-friendly user interface
 - **Database Integration**: MongoDB for persistent data storage
 
@@ -135,6 +137,14 @@ fixwala-website/
 - `PATCH /api/bookings/:id/status` - Update booking status
 - `DELETE /api/bookings/:id` - Delete a booking
 
+### Invoices
+- `GET /api/invoices` - Get all invoices (supports ?archived=true query param)
+- `GET /api/invoices/:id` - Get invoice details with line items and payments
+- `POST /api/invoices` - Create a new invoice with line items
+- `POST /api/invoices/:id/payments` - Add a payment to an invoice
+- `POST /api/invoices/:id/archive` - Archive an invoice
+- `POST /api/invoices/:id/restore` - Restore an archived invoice
+
 ### Health Check
 - `GET /api/health` - Check server status
 
@@ -166,6 +176,44 @@ fixwala-website/
   scheduledTime: String,
   status: String,
   notes: String,
+  timestamps: true
+}
+```
+
+### Invoice Model
+```javascript
+{
+  invoiceNumber: String (unique),
+  customerName: String,
+  issueDate: Date,
+  dueDate: Date,
+  status: String (DRAFT | PAID),
+  total: Number,
+  amountPaid: Number,
+  balanceDue: Number,
+  isArchived: Boolean,
+  timestamps: true
+}
+```
+
+### InvoiceLine Model
+```javascript
+{
+  invoiceId: ObjectId (ref: 'Invoice'),
+  description: String,
+  quantity: Number,
+  unitPrice: Number,
+  lineTotal: Number,
+  timestamps: true
+}
+```
+
+### Payment Model
+```javascript
+{
+  invoiceId: ObjectId (ref: 'Invoice'),
+  amount: Number,
+  paymentDate: Date,
   timestamps: true
 }
 ```
@@ -226,9 +274,28 @@ curl -X POST http://localhost:5000/api/bookings \
 
 ## 📝 Seeding the Database (Optional)
 
-To populate the database with sample services, you can create a seed script or use the API to add services manually.
+To populate the database with sample data:
 
-Example service creation:
+### Seed Services
+```bash
+cd server
+npm run seed
+```
+
+### Seed Invoices
+```bash
+cd server
+node seedInvoices.js
+```
+
+This will create sample invoices with line items and payments for testing the invoice module.
+
+Example invoice structure after seeding:
+- **Invoice 1**: Partially paid invoice with $500 balance due
+- **Invoice 2**: Fully paid invoice with complete payment history
+- **Invoice 3**: Draft invoice with no payments
+
+Example service creation via API:
 ```bash
 curl -X POST http://localhost:5000/api/services \
   -H "Content-Type: application/json" \
