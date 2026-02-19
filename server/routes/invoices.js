@@ -65,7 +65,6 @@ router.post('/:id/payments', async (req, res) => {
 
     // Update invoice
     invoice.amountPaid += amount;
-    invoice.balanceDue = invoice.total - invoice.amountPaid;
     
     // Update status if fully paid
     if (invoice.balanceDue === 0) {

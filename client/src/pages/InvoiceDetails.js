@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import './InvoiceDetails.css';
 import AddPaymentModal from '../components/AddPaymentModal';
+import Toast from '../components/Toast';
 
 function InvoiceDetails() {
   const { id } = useParams();
@@ -10,6 +11,7 @@ function InvoiceDetails() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [toast, setToast] = useState(null);
 
   useEffect(() => {
     fetchInvoiceDetails();
@@ -42,9 +44,12 @@ function InvoiceDetails() {
     try {
       await axios.post(`/api/invoices/${id}/archive`);
       await fetchInvoiceDetails();
-      alert('Invoice archived successfully');
+      setToast({ message: 'Invoice archived successfully', type: 'success' });
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to archive invoice');
+      setToast({ 
+        message: err.response?.data?.message || 'Failed to archive invoice', 
+        type: 'error' 
+      });
     }
   };
 
@@ -52,9 +57,12 @@ function InvoiceDetails() {
     try {
       await axios.post(`/api/invoices/${id}/restore`);
       await fetchInvoiceDetails();
-      alert('Invoice restored successfully');
+      setToast({ message: 'Invoice restored successfully', type: 'success' });
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to restore invoice');
+      setToast({ 
+        message: err.response?.data?.message || 'Failed to restore invoice', 
+        type: 'error' 
+      });
     }
   };
 
@@ -225,6 +233,15 @@ function InvoiceDetails() {
           balanceDue={invoice.balanceDue}
           onSubmit={handleAddPayment}
           onClose={() => setShowPaymentModal(false)}
+        />
+      )}
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
         />
       )}
     </div>
