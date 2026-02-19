@@ -3,11 +3,33 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const bodyParser = require('body-parser');
+const rateLimit = require('express-rate-limit');
 
 // Load environment variables
 dotenv.config();
 
 const app = express();
+
+// Rate limiting middleware
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Stricter rate limiting for write operations
+const strictLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20, // Limit each IP to 20 write requests per windowMs
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Apply rate limiting to all routes
+app.use('/api/', limiter);
 
 // Middleware
 app.use(cors());
@@ -38,7 +60,7 @@ const servicesRouter = require('./routes/services');
 const bookingsRouter = require('./routes/bookings');
 
 app.use('/api/services', servicesRouter);
-app.use('/api/bookings', bookingsRouter);
+app.use('/api/bookings', strictLimiter, bookingsRouter);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
